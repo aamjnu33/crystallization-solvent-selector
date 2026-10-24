@@ -100,12 +100,20 @@ def clean(raw: pd.DataFrame, curated: pd.DataFrame | None = None) -> dict:
         .agg(solute_smiles=("solute_smiles_std", "first"), solute_name=("solute_name", "first"))
         .reset_index()
     )
+    solvent_names = (
+        df.groupby("solvent_key")
+        .agg(solvent_smiles=("solvent_smiles_std", "first"), solvent_name=("solvent_name", "first"))
+        .reset_index()
+    )
+
+    def label(frame: pd.DataFrame) -> pd.DataFrame:
+        return frame.merge(names, on="solute_key", how="left").merge(solvent_names, on="solvent_key", how="left")
 
     def merged(part: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         pts = merge_duplicates(part)
         pairs = fit_pairs(pts)
         pts = pts.merge(pairs[PAIR_KEYS + ["qc_flags"]], on=PAIR_KEYS)
-        return pts.merge(names, on="solute_key", how="left"), pairs.merge(names, on="solute_key", how="left")
+        return label(pts), label(pairs)
 
     points, pairs = merged(dev)
     held_points, held_pairs = merged(held)

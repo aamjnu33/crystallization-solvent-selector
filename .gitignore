@@ -4,3 +4,5 @@ __pycache__/
 .venv/
 data/raw/
 data/processed/
+results/
+models/*.pkl

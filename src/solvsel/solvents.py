@@ -6,6 +6,8 @@
   density_g_mL   liquid density near 25 C
   chem21         CHEM21 ranking (Prat et al., Green Chem. 2016, 18, 288);
                  blank where not yet checked against the paper
+  hsp_dD/dP/dH   Hansen solubility parameters, MPa^0.5 (Hansen, Hansen Solubility
+                 Parameters: A User's Handbook); used by the physics baseline
 
 Every value here must be checked against its source before the repo is public;
 see the data card's "Solvent table" section.
@@ -20,6 +22,7 @@ from rdkit.Chem import Crippen, Descriptors, rdMolDescriptors
 
 from .standardize import canonical_solvent
 
+HSP_COLS = ["hsp_dD", "hsp_dP", "hsp_dH"]
 CURATED_PATH = Path(__file__).resolve().parents[2] / "data" / "solvents_curated.csv"
 
 
@@ -58,7 +61,7 @@ def build_solvent_table(used: pd.DataFrame, curated: pd.DataFrame | None = None)
     curated = load_curated() if curated is None else curated
     desc = pd.DataFrame([_descriptors(s) for s in used["solvent_smiles"]], index=used.index)
     table = pd.concat([used, desc], axis=1).merge(
-        curated[["solvent_key", "ich_q3c_class", "bp_C", "density_g_mL", "chem21"]],
+        curated[["solvent_key", "ich_q3c_class", "bp_C", "density_g_mL", "chem21", *HSP_COLS]],
         on="solvent_key", how="left",
     )
     table["curated"] = table["ich_q3c_class"].notna()
